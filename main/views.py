@@ -1,31 +1,27 @@
-from re import search
-
 from django.shortcuts import render
-from pyexpat.errors import messages
-
 from main.models import Incorrect
-from .models import *
-
+from .models import Correct
 
 def index_view(request):
     correct = None
     incorrects = None
     message = None
-    search = request.GET.get('search')
-    if search:
-        search = search.lower()
-        corrects = Correct.objects.filter(word=search)
+    query = request.GET.get('search')
+
+    if query:
+        query = query.lower()
+        corrects = Correct.objects.filter(word=query)
         if corrects.exists():
             correct = corrects.first()
-            incorrects = correct.incorrect_set.all()  # <-- to‘g‘ri nom
+            incorrects = correct.incorrect_set.all()
         else:
-            incorrects = Incorrect.objects.filter(word=search)
-            if incorrects.exists():
-                incorrect = incorrects.first()
+            incorrects_qs = Incorrect.objects.filter(word=query)
+            if incorrects_qs.exists():
+                incorrect = incorrects_qs.first()
                 correct = incorrect.correct
                 incorrects = correct.incorrect_set.all()
             else:
-                if 'x' not in search and 'h' not in search:
+                if 'x' not in query and 'h' not in query:
                     message = "So'z tarkibida h yoki x mavjud emas!"
                 else:
                     message = "Afsus bunday so'z mavjud emas!"
@@ -34,8 +30,6 @@ def index_view(request):
         'correct': correct,
         'incorrects': incorrects,
         'message': message,
-        'search': search
+        'search': query
     }
     return render(request, 'index.html', context)
-
-
